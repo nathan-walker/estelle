@@ -1,6 +1,7 @@
 "use strict";
 
 var log = require('winston');
+var pluralize = require('pluralize');
 
 class Model {
 	
@@ -14,6 +15,16 @@ class Model {
 		// Initialize the various properties
 		Object.keys(schema).forEach((key) => {
 			// Insert any defaults if necessary
+			var defaultValue = schema[key].defaultValue;
+			
+			// If a function is provided as a default, call the function
+			if (defaultValue) {
+				if (typeof defaultValue === "function") {
+					this.properties[key] = defaultValue();
+				} else {
+					this.properties[key] = defaultValue;
+				}
+			}
 			
 			// Create accessors for the properties on the main class
 			if (this.key !== undefined) {
@@ -119,9 +130,12 @@ class Model {
 	static get tableName() {
 		// Lazy-load the table name
 		delete this.tableName;
-		return this.tableName = this.name;
 		
-		// TODO: add support for options.tableName and pluralizing/lowercasing
+		if (typeof this.options.tableName === "string") {
+			return this.tableName = this.options.tableName;
+		}
+		
+		return this.tableName = pluralize(this.name).toLowerCase();
 	}
 }
 

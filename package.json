@@ -16,6 +16,7 @@
   "author": "Nathan Walker <me@nwalker.org> (http://nwalker.org)",
   "license": "MIT",
   "dependencies": {
+    "pluralize": "^1.2.1",
     "winston": "^2.1.1"
   }
 }
