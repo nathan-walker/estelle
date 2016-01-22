@@ -1,12 +1,19 @@
 "use strict";
 
-var log = require('winston');
+var logger = require('winston');
 var pluralize = require('pluralize');
 
 class Model {
 	
 	// Standard constructor
 	constructor(useDefaults) {
+		
+		if (!this.constructor.connection) {
+			return this._newNoConnectionPromise();
+		} else {
+			this.connection = this.constructor.connection;
+		}
+		
 		// Properties stores the actual data for the schema
 		this.properties = {};
 		
@@ -31,7 +38,7 @@ class Model {
 			
 			// Create accessors for the properties on the main class
 			if (this.key !== undefined) {
-				log.warn(`${key} is already defined in model ${this.constructor.name}. Be sure to access it through ${this.constructor.name}.properties.${key}.`);
+				logger.warn(`${key} is already defined in model ${this.constructor.name}. Be sure to access it through ${this.constructor.name}.properties.${key}.`);
 			} else {
 				Object.defineProperty(this, key, {
 					get: () => this.properties[key],
@@ -44,10 +51,12 @@ class Model {
 	/**
 	 * Find a particular record by id, if an id is specified
 	 * @param id	a unique id for the object
-	 * @return a Query object
+	 * @return a Promise
 	 */
 	static findById(id) {
-		// TODO: Implement findById
+		if (!this.connection) return this._newNoConnectionPromise();
+		
+		return this.connection(this.tableName).select().where({ id: id }).limit(1);
 	}
 	
 	/**
@@ -55,6 +64,8 @@ class Model {
 	 * @return a Query object
 	 */
 	static findAll() {
+		if (!this.connection) return this._newNoConnectionPromise();
+		
 		// TODO: Implement findAll
 	}
 	
@@ -68,6 +79,8 @@ class Model {
 	 * @return an Operation object
 	 */
 	static create(properties) {
+		if (!this.connection) return this._newNoConnectionPromise();
+		
 		// TODO: implement create
 	}
 	
@@ -78,6 +91,8 @@ class Model {
 	 * @return an Operation object
 	 */
 	static createOrUpdate(properties) {
+		if (!this.connection) return this._newNoConnectionPromise();
+		
 		// TODO: implement createOrUpdate
 	}
 	
@@ -139,6 +154,21 @@ class Model {
 		}
 		
 		return this.tableName = pluralize(this.name).toLowerCase();
+	}
+	
+	/**
+	 * Create a Promise that immediately provides an error for no
+	 * available connection
+	 */
+	static _newNoConnectionPromise() {
+		return new Promise(
+			(resolve, reject) => {
+				var err = new Error("No connection available");
+				err.type = "estelle.no-connection";
+				logger.error("Model objects must have Model.connection defined.");
+				reject(err);
+			}
+		);
 	}
 }
 
