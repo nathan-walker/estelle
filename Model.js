@@ -56,7 +56,11 @@ class Model {
 	static findById(id) {
 		if (!this.connection) return this._newNoConnectionPromise();
 		
-		return this.connection(this.tableName).select().where({ id: id }).limit(1);
+		var query = this.connection.select().from(this.tableName).where({ id: id });
+		
+		if (!this.connection.production) this._logQuery(query);
+		
+		return query;
 	}
 	
 	/**
@@ -169,6 +173,13 @@ class Model {
 				reject(err);
 			}
 		);
+	}
+	
+	/**
+	 * Writes a query to the log
+	 */
+	static _logQuery(query) {
+		logger.info(query.toString());
 	}
 }
 
