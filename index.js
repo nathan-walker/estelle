@@ -7,5 +7,6 @@ module.exports = {
 	DataTypes: require("./DataTypes"),
 	connect: (options) => {
 		module.exports.connection = Connection(options);
+		module.exports.dbType = module.exports.connection.clientName;
 	}
 };
