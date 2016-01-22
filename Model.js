@@ -14,15 +14,18 @@ class Model {
 		
 		// Initialize the various properties
 		Object.keys(schema).forEach((key) => {
-			// Insert any defaults if necessary
-			var defaultValue = schema[key].defaultValue;
 			
-			// If a function is provided as a default, call the function
-			if (defaultValue) {
-				if (typeof defaultValue === "function") {
-					this.properties[key] = defaultValue();
-				} else {
-					this.properties[key] = defaultValue;
+			if (useDefaults) {
+				// Insert any defaults if necessary
+				var defaultValue = schema[key].defaultValue;
+				
+				// If a function is provided as a default, call the function
+				if (defaultValue) {
+					if (typeof defaultValue === "function") {
+						this.properties[key] = defaultValue();
+					} else {
+						this.properties[key] = defaultValue;
+					}
 				}
 			}
 			
