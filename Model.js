@@ -6,7 +6,7 @@ var pluralize = require('pluralize');
 class Model {
 	
 	// Standard constructor
-	constructor(useDefaults) {
+	constructor(properties, noDefaults) {
 		
 		if (!this.constructor.connection) {
 			return this._newNoConnectionPromise();
@@ -29,17 +29,17 @@ class Model {
 		}
 		
 		// Properties stores the actual data for the schema
-		this.properties = new Map();
+		this.properties = properties || new Map();
 		
 		// Initialize the various properties
 		schema.forEach((value, key) => {
 			
-			if (useDefaults) {
+			if (!noDefaults) {
 				// Insert any defaults if necessary
 				var defaultValue = schema.get(key).defaultValue;
 				
 				// If a function is provided as a default, call the function
-				if (defaultValue) {
+				if (defaultValue && !this.properties.has("key")) {
 					if (typeof defaultValue === "function") {
 						this.properties.set(key, defaultValue());
 					} else {
@@ -94,14 +94,18 @@ class Model {
 	 */
 	
 	/**
-	 * Create a new record in the database.
-	 * @param properties	a JS object of properties for the object
-	 * @return an Operation object
+	 * Create a new record in the database
+	 * 
+	 * @param properties	a JS Map of properties for the object
+	 * @return a Promise returning an instance of the model
 	 */
 	static create(properties) {
 		if (!this.connection) return this._newNoConnectionPromise();
 		
-		// TODO: implement create
+		var model = new this();
+		return model.create(properties).then(function() {
+			return model;
+		});
 	}
 	
 	/**
@@ -113,7 +117,10 @@ class Model {
 	static createOrUpdate(properties) {
 		if (!this.connection) return this._newNoConnectionPromise();
 		
-		// TODO: implement createOrUpdate
+		var model = new this();
+		return model.createOrUpdate(properties).then(function() {
+			return model;
+		});
 	}
 	
 	/**
