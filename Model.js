@@ -9,7 +9,7 @@ class Model {
 	constructor(properties, noDefaults) {
 		
 		if (!this.constructor.connection) {
-			return this._newNoConnectionPromise();
+			return this.constructor._newNoConnectionPromise();
 		} else {
 			this.connection = this.constructor.connection;
 		}
@@ -171,6 +171,35 @@ class Model {
 	 */
 	static _logQuery(query) {
 		logger.info(query.toString());
+	}
+	
+	/**
+	 * Initializes the table in the database
+	 */
+	static initialize() {
+		if (!this.connection) return this._newNoConnectionPromise();
+		
+		// TODO: validate schema
+		
+		this.connection.schema.createTableIfNotExists(this.tableName, function(table) {
+			for (let [key, type] of this.schema) {
+				var typeVal;
+				if (type.types) {
+					typeVal = type.types[this.connection.clientName];
+				} else if (type.dataType) {
+					typeVal = type.dataType.types[this.connection.clientName];
+				}
+				
+				if (!typeVal) {
+					var err = new Error();
+					err.type = "estelle.schema.noColumnType";
+					err.message = `Column type is not defined for ${this.name}.${key}.`;
+					throw err;
+				}
+				
+				table.specificType(key, typeVal);
+			}
+		});
 	}
 	
 	/** 
