@@ -196,6 +196,12 @@ class Model {
 		// Serialize for use in the database
 		var properties = this.serialize();
 		
+		// Add timestamps
+		if (this.constructor.options.timestamp) {
+			properties.created = Date.now();
+			properties.updated = Date.now();
+		}
+		
 		// Insert into the database
 		return this.connection(this.constructor.tableName).insert(properties);
 	}
@@ -218,7 +224,23 @@ class Model {
 	 * @return an Operation object
 	 */
 	update() {
-		// TODO: implement update
+		// Validate the object
+		var validationError = new Error();
+		
+		if (!this.validate(validationError)) {
+			return this.constructor._newErrorPromise(validationError);
+		}
+		
+		// Serialize for use in the database
+		var properties = this.serialize();
+		
+		// Add timestamp
+		if (this.constructor.options.timestamp) {
+			properties.updated = Date.now();
+		}
+		
+		// Insert into the database
+		return this.connection(this.constructor.tableName).where('id', this.id).update(properties);
 	}
 	
 	/**
@@ -226,7 +248,20 @@ class Model {
 	 * @return an Operation object
 	 */
 	delete() {
-		// TODO: implement delete
+		if (this.constructor.options.safeDelete) {
+			var properties = {};
+			
+			// Add timestamp
+			if (this.constructor.options.timestamp) {
+				properties.updated = Date.now();
+			}
+			
+			properties.deleted = true;
+			
+			return this.connection(this.constructor.tableName).where('id', this.id).update(properties);
+		} else {
+			return this.connection(this.constructor.tableName).where('id', this.id).del();
+		}
 	}
 	
 	/**
