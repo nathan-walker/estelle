@@ -157,6 +157,15 @@ class Model {
 		);
 	}
 	
+	static _newErrorPromise(err) {
+		return new Promise(
+			(resolve, reject) => {
+				logger.error(err.message);
+				reject(err);
+			}
+		);
+	}
+	
 	/**
 	 * Writes a query to the log
 	 */
@@ -174,10 +183,21 @@ class Model {
 	
 	/**
 	 * Create a new record in the database.
-	 * @return an Operation object
+	 * @return a Knex promise
 	 */
 	create() {
-		// TODO: implement create
+		// Validate the object
+		var validationError = new Error();
+		
+		if (!this.validate(validationError)) {
+			return this.constructor._newErrorPromise(validationError);
+		}
+		
+		// Serialize for use in the database
+		var properties = this.serialize();
+		
+		// Insert into the database
+		return this.connection(this.constructor.tableName).insert(properties);
 	}
 	
 	/**
@@ -251,7 +271,12 @@ class Model {
 			}
 			
 			// Check in with the validation function
-			var validate = type.validator || type.dataType.validator;
+			var validate;
+			if (type.validator) {
+				validate = type.validator;
+			} else if (type.dataType) {
+				validate = type.dataType.validator;
+			}
 			if (typeof validate !== 'function') {
 				err.type = "estelle.validation.noValidator";
 				err.message = `${key} in ${model.name} does not have a valid validation function.`;
@@ -276,6 +301,41 @@ class Model {
 		
 		// If we reach this point, then validation passed
 		return true;
+	}
+	
+	/**
+	 * Converts the internal property scheme into something
+	 * the database layer can understand
+	 * 
+	 * Serialize generally operates under the assumption that
+	 * validate() has already been executed
+	 * 
+	 * @return a JS object with all of the necessary properties
+	 */
+	serialize() {
+		var prop = this.properties;
+		var schema = this.constructor.schema;
+		
+		var out = {};
+		
+		for (let [key, value] of prop) {
+			var type = schema.get(key);
+			
+			var serializer;
+			if (type.serialize) {
+				serializer = type.serialize;
+			} else if (type.dataType) {
+				serializer = type.dataType.serialize;
+			}
+			
+			if (typeof serializer !== 'function') {
+				out[key] = value;
+			} else {
+				out[key] = serializer(value);
+			}
+		}
+		
+		return out;
 	}
 }
 
