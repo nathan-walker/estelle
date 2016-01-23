@@ -14,30 +14,42 @@ class Model {
 			this.connection = this.constructor.connection;
 		}
 		
-		// Properties stores the actual data for the schema
-		this.properties = {};
-		
+		// On first model init, add all required keys to an option
 		var schema = this.constructor.schema;
 		
+		if (this.constructor.required === undefined) {
+			var required = new Set();
+			schema.forEach((value, key) => {
+				if (value.required === true || value.primaryKey === true) {
+					required.add(key);
+				}
+			});
+			
+			this.constructor.required = required;
+		}
+		
+		// Properties stores the actual data for the schema
+		this.properties = new Map();
+		
 		// Initialize the various properties
-		Object.keys(schema).forEach((key) => {
+		schema.forEach((value, key) => {
 			
 			if (useDefaults) {
 				// Insert any defaults if necessary
-				var defaultValue = schema[key].defaultValue;
+				var defaultValue = schema.get(key).defaultValue;
 				
 				// If a function is provided as a default, call the function
 				if (defaultValue) {
 					if (typeof defaultValue === "function") {
-						this.properties[key] = defaultValue();
+						this.properties.set(key, defaultValue());
 					} else {
-						this.properties[key] = defaultValue;
+						this.properties.set(key, defaultValue);
 					}
 				}
 			}
 			
 			// Create accessors for the properties on the main class
-			if (this.key !== undefined) {
+			if (this[key] !== undefined) {
 				logger.warn(`${key} is already defined in model ${this.constructor.name}. Be sure to access it through ${this.constructor.name}.properties.${key}.`);
 			} else {
 				Object.defineProperty(this, key, {
@@ -70,7 +82,11 @@ class Model {
 	static findAll() {
 		if (!this.connection) return this._newNoConnectionPromise();
 		
-		// TODO: Implement findAll
+		var query = this.connection.select().from(this.tableName);
+		
+		if (!this.connection.production) this._logQuery(query);
+		
+		return query;
 	}
 	
 	/**
@@ -99,6 +115,51 @@ class Model {
 		
 		// TODO: implement createOrUpdate
 	}
+	
+	/**
+	 * Static Utility methods
+	 */
+	
+	/**
+	 * Get the name that should represent this model in the database
+	 * @return the name of the table as a string
+	 */
+	static get tableName() {
+		// Lazy-load the table name
+		delete this.tableName;
+		
+		if (typeof this.options.tableName === "string") {
+			return this.tableName = this.options.tableName;
+		}
+		
+		return this.tableName = pluralize(this.name).toLowerCase();
+	}
+	
+	/**
+	 * Create a Promise that immediately provides an error for no
+	 * available connection
+	 */
+	static _newNoConnectionPromise() {
+		return new Promise(
+			(resolve, reject) => {
+				var err = new Error("No connection available");
+				err.type = "estelle.no-connection";
+				logger.error("Model objects must have Model.connection defined.");
+				reject(err);
+			}
+		);
+	}
+	
+	/**
+	 * Writes a query to the log
+	 */
+	static _logQuery(query) {
+		logger.info(query.toString());
+	}
+	
+	/** 
+	 * Instance methods
+	 */
 	
 	/**
 	 * Creation instance methods
@@ -142,44 +203,72 @@ class Model {
 	}
 	
 	/**
-	 * Utility methods
+	 * Instance Utilties
 	 */
 	
 	/**
-	 * Get the name that should represent this model in the database
-	 * @return the name of the table as a string
+	 * Validates the current instance based on the parent schema
+	 * @param err	An empty error object for storing possible errors
+	 * @return boolean - false if the schema is invalid, true if the schema is valid
 	 */
-	static get tableName() {
-		// Lazy-load the table name
-		delete this.tableName;
+	validate(err) {
+		var model = this.constructor;
+		var schema = model.schema;
+		var prop = this.properties;
 		
-		if (typeof this.options.tableName === "string") {
-			return this.tableName = this.options.tableName;
+		for (let [key, value] of prop) {
+			
+			var type = schema.get(key);
+			
+			// Check if the key is in the schema
+			if (!type) {
+				err.type = "estelle.validation.unrecognizedKey";
+				err.message = `${key} is not in the schema for ${model.name}.`;
+				return false;
+			}
+			
+			// Check that the key returns a supported type
+			var supportedTypes;
+			if (type.supportedTypes) {
+				supportedTypes = type.supportedTypes;
+			} else if (type.dataType) {
+				supportedTypes = type.dataType.supportedTypes;
+			}
+			
+			if (supportedTypes) {
+				if (!supportedTypes.has(typeof value)) {
+					err.type = "estelle.validation.unacceptedType";
+					err.message = `${typeof value} is not an accepted type for ${key} (type: ${type.name}) in ${model.name}.`;
+					return false;
+				}
+			}
+			
+			// Check in with the validation function
+			var validate = type.validator || type.dataType.validator;
+			if (typeof validate !== 'function') {
+				err.type = "estelle.validation.noValidator";
+				err.message = `${key} in ${model.name} does not have a valid validation function.`;
+				return false;
+			} 
+			
+			if (!validate(value)) {
+				err.type = "estelle.validation.validationFailed";
+				err.message = `${value} is not a valid value for ${model.name}.${key}.`;
+				return false;
+			}
 		}
 		
-		return this.tableName = pluralize(this.name).toLowerCase();
-	}
-	
-	/**
-	 * Create a Promise that immediately provides an error for no
-	 * available connection
-	 */
-	static _newNoConnectionPromise() {
-		return new Promise(
-			(resolve, reject) => {
-				var err = new Error("No connection available");
-				err.type = "estelle.no-connection";
-				logger.error("Model objects must have Model.connection defined.");
-				reject(err);
+		// Check to see if any required values are missing
+		for (let item of model.required) {
+			if (!prop.has(item)) {
+				err.type = "estelle.validation.missingRequired";
+				err.message = `${item} is required in ${model.name}.`;
+				return false;
 			}
-		);
-	}
-	
-	/**
-	 * Writes a query to the log
-	 */
-	static _logQuery(query) {
-		logger.info(query.toString());
+		}
+		
+		// If we reach this point, then validation passed
+		return true;
 	}
 }
 
@@ -201,14 +290,16 @@ Model.options = {
 
 /**
  * The schema for the data model
- * Represented as a JS object where the property name is the key,
+ * Represented as a JS Map where the property name is the key,
  * and the value is the type from DataTypes
  * 
  * Alternatively, the value can be an object with the following options:
  * dataType: the type from DataTypes
  * defaultValue: the default value of the field
  * validator: a special validation function for this field (returns false if bad)
+ * required: whether or not this is necessary
+ * primaryKey: true if this is the primaryKey
  */
-Model.schema = {};
+Model.schema = new Map();
 
 module.exports = Model;
