@@ -139,7 +139,7 @@ class Model {
 			return this.tableName = this.options.tableName;
 		}
 		
-		return this.tableName = pluralize(this.name).toLowerCase();
+		return pluralize(this.name).toLowerCase();
 	}
 	
 	/**
@@ -181,8 +181,8 @@ class Model {
 		
 		// TODO: validate schema
 		
-		this.connection.schema.createTableIfNotExists(this.tableName, function(table) {
-			for (let [key, type] of this.schema) {
+		return this.connection.schema.createTableIfNotExists(this.tableName, (table) => {
+			this.schema.forEach((type, key) => {
 				var typeVal;
 				if (type.types) {
 					typeVal = type.types[this.connection.clientName];
@@ -197,8 +197,10 @@ class Model {
 					throw err;
 				}
 				
+				console.log(key);
+				console.log(typeVal);
 				table.specificType(key, typeVal);
-			}
+			});
 		});
 	}
 	
@@ -232,7 +234,10 @@ class Model {
 		}
 		
 		// Insert into the database
-		return this.connection(this.constructor.tableName).insert(properties);
+		var query = this.connection(this.constructor.tableName).insert(properties);
+		this.constructor._logQuery(query);
+		
+		return query;
 	}
 	
 	/**
@@ -307,7 +312,7 @@ class Model {
 		var schema = model.schema;
 		var prop = this.properties;
 		
-		for (let [key, value] of prop) {
+		prop.forEach((value, key) => {
 			
 			var type = schema.get(key);
 			
@@ -352,7 +357,7 @@ class Model {
 				err.message = `${value} is not a valid value for ${model.name}.${key}.`;
 				return false;
 			}
-		}
+		});
 		
 		// Check to see if any required values are missing
 		for (let item of model.required) {
@@ -382,7 +387,7 @@ class Model {
 		
 		var out = {};
 		
-		for (let [key, value] of prop) {
+		prop.forEach((value, key) => {
 			var type = schema.get(key);
 			
 			var serializer;
@@ -397,7 +402,7 @@ class Model {
 			} else {
 				out[key] = serializer(value);
 			}
-		}
+		});
 		
 		return out;
 	}

@@ -2,11 +2,12 @@ module.exports = {
 	STRING: {
 		name: "str",
 		types: {
-			postgres: (value) => "TEXT",
-			mysql: (value) => "TEXT",
-			sqlite3: (value) => "TEXT"
+			postgres: "TEXT",
+			mysql: "TEXT",
+			sqlite3: "TEXT"
 		},
-		validator: () => true
+		validator: () => true,
+		defaultValue: "hello"
 	},
 	
 	INTEGER: {
