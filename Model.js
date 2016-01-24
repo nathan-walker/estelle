@@ -53,8 +53,8 @@ class Model {
 				logger.warn(`${key} is already defined in model ${this.constructor.name}. Be sure to access it through ${this.constructor.name}.properties.${key}.`);
 			} else {
 				Object.defineProperty(this, key, {
-					get: () => this.properties[key],
-					set: (newValue) => { this.properties[key] = newValue; }
+					get: () => this.properties.get(key),
+					set: (newValue) => this.properties.set(key, newValue) 
 				});
 			}
 		});
@@ -201,6 +201,16 @@ class Model {
 				console.log(typeVal);
 				table.specificType(key, typeVal);
 			});
+			
+			if (this.options.timestamp) {
+				if (this.connection.clientName === 'pg') {
+					table.specificType("created", "timestamp");
+					table.specificType("updated", "timestamp");
+				} else {
+					table.specificType("created", "datetime");
+					table.specificType("updated", "datetime");
+				}
+			}
 		});
 	}
 	
@@ -236,6 +246,15 @@ class Model {
 		// Insert into the database
 		var query = this.connection(this.constructor.tableName).insert(properties);
 		this.constructor._logQuery(query);
+		
+		return query.then((ids) => {
+			if (ids.length === 1) return this;
+			
+			var err = new Error();
+			err.type = "estelle.sql.insertion";
+			err.message = `Error inserting ${this.id} into the database for ${this.constructor.tableName}.`;
+			throw err;
+		});
 		
 		return query;
 	}
