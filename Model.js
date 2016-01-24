@@ -101,7 +101,8 @@ class Model {
 		
 		if (!this.connection.production) this._logQuery(query);
 		
-		return query;
+		// TODO: verify that there was a return
+		return query.then((res) => new this(res[0], true));
 	}
 	
 	/**
