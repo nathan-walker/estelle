@@ -29,7 +29,13 @@ class Model {
 		}
 		
 		// Properties stores the actual data for the schema
-		this.properties = properties || new Map();
+		this.properties = new Map();
+		
+		if (properties) {
+			Object.keys(properties).forEach((key) => {
+				this.properties.set(key, properties[key]);
+			});
+		}
 		
 		// Initialize the various properties
 		schema.forEach((value, key) => {

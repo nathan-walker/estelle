@@ -29,6 +29,7 @@ MyModel.initialize().then(function() {
 		MyModel.findById(model.id).then((out) => {
 			var returned = new MyModel(out[0], true);
 			console.log(returned);
+			console.log(returned.id);
 		});
 	});
 });
