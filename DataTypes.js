@@ -28,7 +28,8 @@ module.exports = {
 			mysql: "datetime",
 			sqlite3: "datetime"
 		},
-		validator: (value) => value instanceof Date
+		validator: (value) => value instanceof Date,
+		deserialize: (value) => new Date(value)
 	},
 	
 	UUID: {

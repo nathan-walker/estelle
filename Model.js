@@ -33,7 +33,30 @@ class Model {
 		
 		if (properties) {
 			Object.keys(properties).forEach((key) => {
-				this.properties.set(key, properties[key]);
+				
+				if (this.constructor.options.timestamp && (key === 'created' || key === 'updated')) {
+					this[key] = Date(properties[key]);
+					return;
+				}
+				
+				var type = schema.get(key);
+				
+				if (!type) return;
+				
+				var value = properties[key];
+				
+				var deserializer;
+				if (type.serialize) {
+					deserializer = type.serialize;
+				} else if (type.dataType) {
+					deserializer = type.dataType.serialize;
+				}
+				
+				if (typeof deserializer !== 'function') {
+					this.properties.set(key, value);
+				} else {
+					this.properties.set(key, deserializer(value));
+				}
 			});
 		}
 		
