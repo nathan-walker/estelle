@@ -88,8 +88,13 @@ class Model {
 		
 		if (!this.connection.production) this._logQuery(query);
 		
-		// TODO: verify that there was a return
-		return query.then((res) => new this(res[0], true));
+		return query.then((res) => {
+			if (res.length > 0) {
+				return new this(res[0], true);
+			} else {
+				return null;
+			}
+		});
 	}
 	
 	/**
@@ -103,7 +108,6 @@ class Model {
 		
 		if (!this.connection.production) this._logQuery(query);
 		
-		// TODO: verify that there was a return
 		return query.then((res) => {
 			var out = [];
 			res.forEach((obj) => out.push(new this(obj, true)));
@@ -200,8 +204,6 @@ class Model {
 	 */
 	static initialize() {
 		if (!this.connection) return this._newNoConnectionPromise();
-		
-		// TODO: validate schema
 		
 		// On first model init, add all required keys to an option
 		
