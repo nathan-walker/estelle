@@ -18,6 +18,8 @@ class Model {
 		// Properties stores the actual data for the schema
 		this.properties = new Map();
 		
+		var schema = this.constructor.schema;
+		
 		if (properties) {
 			Object.keys(properties).forEach((key) => {
 				

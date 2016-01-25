@@ -35,6 +35,8 @@ MyModel.initialize().then(function() {
 	
 	MyModel.findById("782edc35-bcd8-4999-8692-45d79456d5d0").then((doc) => {
 		console.log(doc.name);
+		doc.name = "John";
+		doc.update().then();
 	});
 	
 	MyModel.findAll().then(function(models) {
