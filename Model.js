@@ -15,20 +15,6 @@ class Model {
 			this.connection = this.constructor.connection;
 		}
 		
-		// On first model init, add all required keys to an option
-		var schema = this.constructor.schema;
-		
-		if (this.constructor.required === undefined) {
-			var required = new Set();
-			schema.forEach((value, key) => {
-				if (value.required === true || value.primaryKey === true) {
-					required.add(key);
-				}
-			});
-			
-			this.constructor.required = required;
-		}
-		
 		// Properties stores the actual data for the schema
 		this.properties = new Map();
 		
@@ -216,6 +202,19 @@ class Model {
 		if (!this.connection) return this._newNoConnectionPromise();
 		
 		// TODO: validate schema
+		
+		// On first model init, add all required keys to an option
+		
+		if (this.required === undefined) {
+			var required = new Set();
+			this.schema.forEach((value, key) => {
+				if (value.required === true || value.primaryKey === true) {
+					required.add(key);
+				}
+			});
+			
+			this.required = required;
+		}
 		
 		return this.connection.schema.createTableIfNotExists(this.tableName, (table) => {
 			this.schema.forEach((type, key) => {
