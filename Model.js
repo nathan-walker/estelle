@@ -28,6 +28,11 @@ class Model {
 					return;
 				}
 				
+				if (this.constructor.options.safeDelete && key === 'deleted') {
+					this.deleted = properties.deleted;
+					return;
+				}
+				
 				var type = schema.get(key);
 				
 				if (!type) return;
@@ -212,7 +217,7 @@ class Model {
 		if (this.required === undefined) {
 			var required = new Set();
 			this.schema.forEach((value, key) => {
-				if (value.required === true || value.primaryKey === true) {
+				if (value.required === true || this.primaryKey === key) {
 					required.add(key);
 				}
 			});
@@ -238,7 +243,9 @@ class Model {
 				
 				console.log(key);
 				console.log(typeVal);
-				table.specificType(key, typeVal);
+				var column = table.specificType(key, typeVal);
+				
+				if (this.required.has(key)) column.notNullable();
 			});
 			
 			if (this.options.timestamp) {
@@ -249,6 +256,10 @@ class Model {
 					table.specificType("created", "datetime");
 					table.specificType("updated", "datetime");
 				}
+			}
+			
+			if (this.options.safeDelete) {
+				table.specificType("deleted", "boolean").notNullable().defaultTo(false);
 			}
 		});
 	}
@@ -479,7 +490,10 @@ Model.options = {
 	
 	// The name of the table in the database
 	// If not set, the name will be automatically generated
-	tableName: undefined,	
+	tableName: undefined,
+	
+	// The primary key for the database, implied required
+	primaryKey: undefined
 };
 
 /**

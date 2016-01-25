@@ -40,5 +40,14 @@ module.exports = {
 		},
 		validator: (value) => validUuid.test(value),
 		defaultValue: uuid.v4
+	},
+	
+	BOOLEAN: {
+		types: {
+			pg: "boolean", 
+			mysql: "boolean",
+			sqlite3: "boolean"
+		},
+		validator: (value) => typeof value === 'boolean'
 	}
 };
