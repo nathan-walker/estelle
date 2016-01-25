@@ -2,6 +2,7 @@
 
 var logger = require('winston');
 var pluralize = require('pluralize');
+var async = require('async');
 
 class Model {
 	
@@ -116,7 +117,12 @@ class Model {
 		
 		if (!this.connection.production) this._logQuery(query);
 		
-		return query;
+		// TODO: verify that there was a return
+		return query.then((res) => {
+			var out = [];
+			res.forEach((obj) => out.push(new this(obj, true)));
+			return out;
+		});
 	}
 	
 	/**

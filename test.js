@@ -1,6 +1,7 @@
 "use strict";
 
 var estelle = require('./index.js');
+var logger = require('winston');
 var Model = estelle.Model;
 
 var db = estelle.connect({
@@ -34,6 +35,10 @@ MyModel.initialize().then(function() {
 	
 	MyModel.findById("782edc35-bcd8-4999-8692-45d79456d5d0").then((doc) => {
 		console.log(doc.name);
+	});
+	
+	MyModel.findAll().then(function(models) {
+		models.forEach((obj) => logger.info(obj.id + obj.name));
 	});
 });
 
