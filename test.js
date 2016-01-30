@@ -35,10 +35,9 @@ MyModel.initialize().then(function() {
 		});
 	});
 	
-	MyModel.findById("03f63659-f124-4762-ac2a-3478c585f887").then((doc) => {
+	MyModel.findById("86933edd-3810-4b4b-be07-9155fb5603d8").then((doc) => {
 		console.log(doc.name);
-		doc.name = "Johnny Appleseed";
-		doc.update().then();
+		doc.delete().then();
 	});
 	
 	MyModel.findAll().then(function(models) {
