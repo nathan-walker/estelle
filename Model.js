@@ -217,7 +217,10 @@ class Model {
 		if (this.required === undefined) {
 			var required = new Set();
 			this.schema.forEach((value, key) => {
-				if (value.required === true || this.options.primaryKey === key) {
+				if (value.required === true 
+					|| this.options.primaryKey === key 
+					|| (this.options.compositePrimaryKey 
+						&& this.options.compositePrimaryKey.indexOf(key) !== -1)) {
 					required.add(key);
 				}
 			});
@@ -259,6 +262,10 @@ class Model {
 			
 			if (this.options.safeDelete) {
 				table.specificType("deleted", "boolean").notNullable().defaultTo(false);
+			}
+			
+			if (this.options.compositePrimaryKey) {
+				table.primary(this.options.compositePrimaryKey);
 			}
 		});
 	}
@@ -492,7 +499,10 @@ Model.options = {
 	tableName: undefined,
 	
 	// The primary key for the database, implied required
-	primaryKey: undefined
+	primaryKey: undefined,
+	
+	// An array of keys, if a composite primary key is desired
+	compositePrimaryKey: undefined
 };
 
 /**
