@@ -49,5 +49,27 @@ module.exports = {
 			sqlite3: "boolean"
 		},
 		validator: (value) => typeof value === 'boolean'
+	},
+	
+	VARCHAR: function(number) {
+		return {
+			types: {
+				pg: `varchar(${number})`,
+				mysql: `varchar(${number})`,
+				sqlite3: `varchar(${number})`
+			},
+			validator: (value) => typeof value === 'string' && value.length <= number
+		};
+	},
+	
+	CHAR: function(number) {
+		return {
+			types: {
+				pg: `char(${number})`,
+				mysql: `char(${number})`,
+				sqlite3: `char(${number})`
+			},
+			validator: (value) => typeof value === 'string' && value.length === number
+		};
 	}
 };
