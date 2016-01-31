@@ -485,7 +485,7 @@ class Model {
  * A set of global options for the model.
  * Should NOT be modified at runtime
  */
-Model.options = {
+Model.prototype.options = {
 	// If true, the rows will only be marked deleted instead of actually removed
 	safeDelete:	true,
 	
@@ -515,6 +515,6 @@ Model.options = {
  * required: whether or not this is necessary
  * primaryKey: true if this is the primaryKey
  */
-Model.schema = new Map();
+Model.prototype.schema = new Map();
 
 module.exports = Model;
