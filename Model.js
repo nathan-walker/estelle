@@ -484,8 +484,11 @@ class Model {
 /**
  * A set of global options for the model.
  * Should NOT be modified at runtime
+ * 
+ * Please create a new object for each new model,
+ * otherwise you will modifying global settings
  */
-Model.prototype.options = {
+Model.options = {
 	// If true, the rows will only be marked deleted instead of actually removed
 	safeDelete:	true,
 	
