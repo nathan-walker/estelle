@@ -217,7 +217,7 @@ class Model {
 		if (this.required === undefined) {
 			var required = new Set();
 			this.schema.forEach((value, key) => {
-				if (value.required === true || this.primaryKey === key) {
+				if (value.required === true || this.options.primaryKey === key) {
 					required.add(key);
 				}
 			});
@@ -241,11 +241,10 @@ class Model {
 					throw err;
 				}
 				
-				console.log(key);
-				console.log(typeVal);
 				var column = table.specificType(key, typeVal);
 				
 				if (this.required.has(key)) column.notNullable();
+				if (this.options.primaryKey === key) column.primary();
 			});
 			
 			if (this.options.timestamp) {

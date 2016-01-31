@@ -20,7 +20,8 @@ MyModel.schema = new Map();
 MyModel.schema.set("id", estelle.DataTypes.UUID);
 MyModel.schema.set("name", estelle.DataTypes.STRING);
 MyModel.schema.set("dob", estelle.DataTypes.DATETIME);
-// MyModel.options.timestamp = true;
+MyModel.options.timestamp = true;
+MyModel.options.primaryKey = "id";
 console.log(MyModel.tableName);
 
 MyModel.initialize().then(function() {
