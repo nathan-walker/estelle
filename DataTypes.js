@@ -71,5 +71,16 @@ module.exports = {
 			},
 			validator: (value) => typeof value === 'string' && value.length === number
 		};
+	},
+	
+	JSON: {
+		types: {
+			pg: "jsonb",
+			mysql: "text",
+			sqlite3: "text"
+		},
+		validator: (value) => typeof value === "object",
+		serializer: (value) => JSON.stringify(value),
+		deserializer: (value) => JSON.parse(value)
 	}
 };
