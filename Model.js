@@ -165,11 +165,9 @@ class Model {
 	 * @return the name of the table as a string
 	 */
 	static get tableName() {
-		// Lazy-load the table name
-		delete this.tableName;
 		
 		if (typeof this.options.tableName === "string") {
-			return this.tableName = this.options.tableName;
+			return this.options.tableName;
 		}
 		
 		return pluralize(this.name).toLowerCase();
