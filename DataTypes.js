@@ -80,7 +80,10 @@ module.exports = {
 			sqlite3: "text"
 		},
 		validator: (value) => typeof value === "object",
-		serializer: (value) => JSON.stringify(value),
-		deserializer: (value) => JSON.parse(value)
+		serialize: (value) => {
+			console.log('serializing');
+			return JSON.stringify(value);
+		},
+		deserialize: (value) => JSON.parse(value)
 	}
 };

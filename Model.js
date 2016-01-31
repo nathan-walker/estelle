@@ -40,10 +40,10 @@ class Model {
 				var value = properties[key];
 				
 				var deserializer;
-				if (type.serialize) {
-					deserializer = type.serialize;
+				if (type.deserialize) {
+					deserializer = type.deserialize;
 				} else if (type.dataType) {
-					deserializer = type.dataType.serialize;
+					deserializer = type.dataType.deserialize;
 				}
 				
 				if (typeof deserializer !== 'function') {
