@@ -87,7 +87,7 @@ module.exports = {
 		deserialize: (value) => {
 			try {
 				return JSON.parse(value);
-			} catch {
+			} catch (e) {
 				return undefined;
 			}
 		}
