@@ -105,6 +105,26 @@ class Model {
 	}
 	
 	/**
+	 * Find any entries that match the following criteria
+	 * @param where		an object that describes any conditions for the query
+	 * @return a Promise
+	 */
+	
+	static findWhere(where) {
+		if (!this.connection) return this._newNoConnectionPromise();
+		
+		var query = this.connection.select().from(this.tableName).where(where);
+		
+		if (!this.connection.production) this._logQuery(query);
+		
+		return query.then((res) => {
+			var out = [];
+			res.forEach((obj) => out.push(new this(obj, true)));
+			return out;
+		});
+	}
+	
+	/**
 	 * Find all records in a specific table
 	 * @return a Query object
 	 */
