@@ -62,7 +62,7 @@ class Model {
 				var defaultValue = schema.get(key).defaultValue;
 				
 				// If a function is provided as a default, call the function
-				if (defaultValue && !this.properties.has("key")) {
+				if (defaultValue && !this.properties.has(key)) {
 					if (typeof defaultValue === "function") {
 						this.properties.set(key, defaultValue());
 					} else {
