@@ -84,6 +84,12 @@ module.exports = {
 			console.log('serializing');
 			return JSON.stringify(value);
 		},
-		deserialize: (value) => JSON.parse(value)
+		deserialize: (value) => {
+			try {
+				return JSON.parse(value);
+			} catch {
+				return undefined;
+			}
+		}
 	}
 };
