@@ -155,8 +155,8 @@ class Model {
 	static create(properties) {
 		if (!this.connection) return this._newNoConnectionPromise();
 		
-		var model = new this();
-		return model.create(properties).then(function() {
+		var model = new this(properties);
+		return model.create().then(function() {
 			return model;
 		});
 	}
