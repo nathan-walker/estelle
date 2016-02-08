@@ -7,7 +7,7 @@ var async = require('async');
 class Model {
 	
 	// Standard constructor
-	constructor(properties, noDefaults) {
+	constructor(properties, fromDatabase) {
 		
 		if (!this.constructor.connection) {
 			return this.constructor._newNoConnectionPromise();
@@ -39,17 +39,19 @@ class Model {
 				
 				var value = properties[key];
 				
-				var deserializer;
-				if (type.deserialize) {
-					deserializer = type.deserialize;
-				} else if (type.dataType) {
-					deserializer = type.dataType.deserialize;
-				}
-				
-				if (typeof deserializer !== 'function') {
-					this.properties.set(key, value);
-				} else {
-					this.properties.set(key, deserializer(value));
+				if (fromDatabase) {
+					var deserializer;
+					if (type.deserialize) {
+						deserializer = type.deserialize;
+					} else if (type.dataType) {
+						deserializer = type.dataType.deserialize;
+					}
+					
+					if (typeof deserializer !== 'function') {
+						this.properties.set(key, value);
+					} else {
+						this.properties.set(key, deserializer(value));
+					}
 				}
 			});
 		}
@@ -57,7 +59,7 @@ class Model {
 		// Initialize the various properties
 		schema.forEach((value, key) => {
 			
-			if (!noDefaults) {
+			if (!fromDatabase) {
 				// Insert any defaults if necessary
 				var defaultValue = schema.get(key).defaultValue;
 				
