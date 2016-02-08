@@ -52,6 +52,8 @@ class Model {
 					} else {
 						this.properties.set(key, deserializer(value));
 					}
+				} else {
+					this.properties.set(key, value);
 				}
 			});
 		}
