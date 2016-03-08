@@ -194,8 +194,8 @@ class Model {
 			return this._newNoConnectionPromise();
 		}
 		
-		var model = new this();
-		return model.createOrUpdate(properties).then(function() {
+		var model = new this(properties);
+		return model.createOrUpdate().then(function() {
 			return model;
 		});
 	}
@@ -368,6 +368,8 @@ class Model {
 	/**
 	 * If a record exists in the database, update it.
 	 * If the record does not exist, create a new one.
+	 * 
+	 * NOTE: this function can be a bit risky with defaultValues, so be careful!
 	 * @return a Knex promise
 	 */
 	createOrUpdate() {
@@ -388,11 +390,24 @@ class Model {
 		}
 		
 		// Insert into the database
-		var query = this.connection(this.constructor.tableName);
+		var query = this.connection(this.constructor.tableName).insert(properties).toString();
+		delete properties.created;
+		var updateQuery = this.connection(this.constructor.tableName).update(properties).toString();
+		
+		// TODO: change update query so it doesn't include "created"
+		// TODO: do something with safeDelete
+		
 		switch (this.connection.clientName) {
 			case "pg":
-				query.insert(properties).toString();
-				// TODO: finish this
+				// TODO test this!
+				query += " on conflict do " + updateQuery;
+				query += "";
+				query = this.connection.raw(query);
+				break;
+			case "sqlite3":
+				query = "insert or ignore" + query.substr(6);
+				query += "; " + updateQuery;
+				query;
 		}
 		
 		this.constructor._logQuery(query);

@@ -27,10 +27,12 @@ console.log(MyModel.tableName);
 
 MyModel.initialize().then(function() {
 	var newModel = new MyModel();
-
+	
+	newModel.name = "Nathan";
 	newModel.dob = new Date("1984-01-24 00:00:00 -0500");
 	newModel.settings = {a: "B"};
-	newModel.create().then((model) => {
+	newModel.create().then(() => {
+		var model = newModel;
 		console.log(model.id);
 		MyModel.findById(model.id).then((out) => {
 			console.log(out);
@@ -38,13 +40,20 @@ MyModel.initialize().then(function() {
 		});
 	});
 	
-	MyModel.findById("86933edd-3810-4b4b-be07-9155fb5603d8").then((doc) => {
+	MyModel.findById("ec096db1-5f2a-4e11-a74c-85075a12856f").then((doc) => {
 		console.log(doc.name);
 		doc.delete().then();
 	});
 	
 	MyModel.findAll().then(function(models) {
 		models.forEach((obj) => logger.info(obj.id + obj.name));
+	});
+	
+	MyModel.createOrUpdate({
+		id: "ec096db1-5f2a-4e11-a74c-85075a12856f",
+		name: "Tim"
+	}).then((model) => {
+		debugger;
 	});
 });
 
