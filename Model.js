@@ -215,6 +215,14 @@ class Model {
 	}
 	
 	/**
+	 * Return an object that can perform raw Knex queries
+	 * @return Knex object
+	 */
+	static get raw() {
+		return this.connection;
+	}
+	
+	/**
 	 * Static Utility methods
 	 */
 	
