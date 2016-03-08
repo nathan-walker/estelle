@@ -35,7 +35,9 @@ class Model {
 				
 				var type = schema.get(key);
 				
-				if (!type) return;
+				if (!type) {
+					return;
+				}
 				
 				var value = properties[key];
 				
@@ -93,11 +95,15 @@ class Model {
 	 * @return a Promise
 	 */
 	static findById(id) {
-		if (!this.connection) return this._newNoConnectionPromise();
+		if (!this.connection) {
+			return this._newNoConnectionPromise();
+		}
 		
 		var query = this.connection.select().from(this.tableName).where({ id: id });
 		
-		if (!this.connection.production) this._logQuery(query);
+		if (!this.connection.production) {
+			this._logQuery(query);
+		}
 		
 		return query.then((res) => {
 			if (res.length > 0) {
@@ -115,11 +121,15 @@ class Model {
 	 */
 	
 	static findWhere(where) {
-		if (!this.connection) return this._newNoConnectionPromise();
+		if (!this.connection) {
+			return this._newNoConnectionPromise();
+		}
 		
 		var query = this.connection.select().from(this.tableName).where(where);
 		
-		if (!this.connection.production) this._logQuery(query);
+		if (!this.connection.production) {
+			this._logQuery(query);
+		}
 		
 		return query.then((res) => {
 			var out = [];
@@ -133,11 +143,15 @@ class Model {
 	 * @return a Query object
 	 */
 	static findAll() {
-		if (!this.connection) return this._newNoConnectionPromise();
+		if (!this.connection) {
+			return this._newNoConnectionPromise();
+		}
 		
 		var query = this.connection.select().from(this.tableName);
 		
-		if (!this.connection.production) this._logQuery(query);
+		if (!this.connection.production) {
+			this._logQuery(query);
+		}
 		
 		return query.then((res) => {
 			var out = [];
@@ -157,7 +171,9 @@ class Model {
 	 * @return a Promise returning an instance of the model
 	 */
 	static create(properties) {
-		if (!this.connection) return this._newNoConnectionPromise();
+		if (!this.connection) {
+			return this._newNoConnectionPromise();
+		}
 		
 		var model = new this(properties);
 		return model.create().then(function() {
@@ -172,7 +188,9 @@ class Model {
 	 * @return an Operation object
 	 */
 	static createOrUpdate(properties) {
-		if (!this.connection) return this._newNoConnectionPromise();
+		if (!this.connection) {
+			return this._newNoConnectionPromise();
+		}
 		
 		var model = new this();
 		return model.createOrUpdate(properties).then(function() {
@@ -232,17 +250,19 @@ class Model {
 	 * Initializes the table in the database
 	 */
 	static initialize() {
-		if (!this.connection) return this._newNoConnectionPromise();
+		if (!this.connection) {
+			return this._newNoConnectionPromise();
+		}
 		
 		// On first model init, add all required keys to an option
 		
 		if (this.required === undefined) {
 			var required = new Set();
 			this.schema.forEach((value, key) => {
-				if (value.required === true 
-					|| this.options.primaryKey === key 
-					|| (this.options.compositePrimaryKey 
-						&& this.options.compositePrimaryKey.indexOf(key) !== -1)) {
+				if (value.required === true ||
+				this.options.primaryKey === key ||
+				(this.options.compositePrimaryKey &&
+				this.options.compositePrimaryKey.indexOf(key) !== -1)) {
 					required.add(key);
 				}
 			});
@@ -268,8 +288,12 @@ class Model {
 				
 				var column = table.specificType(key, typeVal);
 				
-				if (this.required.has(key)) column.notNullable();
-				if (this.options.primaryKey === key) column.primary();
+				if (this.required.has(key)) {
+					column.notNullable();
+				}
+				if (this.options.primaryKey === key) {
+					column.primary();
+				}
 			});
 			
 			if (this.options.timestamp) {
@@ -326,15 +350,15 @@ class Model {
 		this.constructor._logQuery(query);
 		
 		return query.then((ids) => {
-			if (ids.length === 1) return this;
+			if (ids.length === 1) {
+				return this;
+			}
 			
 			var err = new Error();
 			err.type = "estelle.sql.insertion";
 			err.message = `Error inserting ${this.id} into the database for ${this.constructor.tableName}.`;
 			throw err;
 		});
-		
-		return query;
 	}
 	
 	/**
