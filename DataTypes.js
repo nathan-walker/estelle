@@ -48,7 +48,21 @@ module.exports = {
 			mysql: "boolean",
 			sqlite3: "boolean"
 		},
-		validator: (value) => typeof value === 'boolean'
+		validator: (value) => typeof value === 'boolean',
+		serialize: (value) => {
+			if (value) {
+				return 1;
+			} else {
+				return 0;
+			}
+		},
+		deserialize: (value) => {
+			if (value === 'false') {
+				return 0;
+			} else {
+				return Boolean(value);
+			}
+		}
 	},
 	
 	VARCHAR: function(number) {

@@ -35,25 +35,31 @@ MyModel.initialize().then(function() {
 		var model = newModel;
 		console.log(model.id);
 		MyModel.findById(model.id).then((out) => {
-			console.log(out);
 			console.log(out.id);
 		});
 	});
 	
-	MyModel.findById("ec096db1-5f2a-4e11-a74c-85075a12856f").then((doc) => {
-		console.log(doc.name);
-		doc.delete().then();
+	MyModel.findById("1220ede2-0d56-47c1-ab83-7afc07dda6ea").then((doc) => {
+		if (doc) {
+			console.log(doc.name);
+			doc.delete().then();
+		} else {
+			console.log("not found/deleted");
+		}
 	});
 	
 	MyModel.findAll().then(function(models) {
 		models.forEach((obj) => logger.info(obj.id + obj.name));
 	});
 	
-	MyModel.createOrUpdate({
+	/*MyModel.createOrUpdate({
 		id: "ec096db1-5f2a-4e11-a74c-85075a12856f",
-		name: "Tim"
+		name: "Steve",
+		settings: {
+			hello: "sweetie"
+		}
 	}).then((model) => {
 		debugger;
-	});
+	}).catch((err) => console.log(err));*/
 });
 

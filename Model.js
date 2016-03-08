@@ -106,8 +106,13 @@ class Model {
 		}
 		
 		return query.then((res) => {
+			console.log(res);
 			if (res.length > 0) {
-				return new this(res[0], true);
+				if (!this.options.safeDelete || res[0].deleted === 'false' || !res[0].deleted) {
+					return new this(res[0], true);
+				} else {
+					return null;
+				}
 			} else {
 				return null;
 			}
@@ -135,7 +140,11 @@ class Model {
 		
 		return query.then((res) => {
 			var out = [];
-			res.forEach((obj) => out.push(new this(obj, true)));
+			res.forEach((obj) => {
+				if (!this.options.safeDelete || obj.deleted === 'false' || !obj.deleted) {
+					out.push(new this(obj, true));
+				}	
+			});
 			return out;
 		});
 	}
@@ -157,7 +166,11 @@ class Model {
 		
 		return query.then((res) => {
 			var out = [];
-			res.forEach((obj) => out.push(new this(obj, true)));
+			res.forEach((obj) => {
+				if (!this.options.safeDelete || obj.deleted === 'false' || !obj.deleted) {
+					out.push(new this(obj, true));
+				}	
+			});
 			return out;
 		});
 	}
@@ -179,6 +192,7 @@ class Model {
 		
 		var model = new this(properties);
 		return model.create().then(function() {
+			// TODO: check if create was successful
 			return model;
 		});
 	}
@@ -392,10 +406,7 @@ class Model {
 		// Insert into the database
 		var query = this.connection(this.constructor.tableName).insert(properties).toString();
 		delete properties.created;
-		var updateQuery = this.connection(this.constructor.tableName).update(properties).toString();
-		
-		// TODO: change update query so it doesn't include "created"
-		// TODO: do something with safeDelete
+		var updateQuery = this.connection.update(properties).toString();
 		
 		switch (this.connection.clientName) {
 			case "pg":
@@ -404,11 +415,13 @@ class Model {
 				query += "";
 				query = this.connection.raw(query);
 				break;
-			case "sqlite3":
-				query = "insert or ignore" + query.substr(6);
-				query += "; " + updateQuery;
-				query;
+			default:
+				var err = new Error("createOrUpdate is not supported for " + this.connection.clientName);
+				err.type = "estelle.unsupportedOperation";
+				return Promise.reject(err);
 		}
+		
+		query = this.connection.raw(query);
 		
 		this.constructor._logQuery(query);
 		return query;
@@ -422,6 +435,8 @@ class Model {
 	 * Push any updates made to the object to the database
 	 * @return a Knex promise
 	 */
+	
+	// TODO: do something with safeDelete
 	update() {
 		// Validate the object
 		var validationError = new Error();
