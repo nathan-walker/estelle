@@ -114,6 +114,8 @@ class Model {
 		});
 	}
 	
+	// TODO: filter out any safe deleted
+	
 	/**
 	 * Find any entries that match the following criteria
 	 * @param where		an object that describes any conditions for the query
@@ -349,7 +351,9 @@ class Model {
 		var query = this.connection(this.constructor.tableName).insert(properties);
 		this.constructor._logQuery(query);
 		
-		return query.then((ids) => {
+		return query;
+		
+		/*return query.then((ids) => {
 			if (ids.length === 1) {
 				return this;
 			}
@@ -358,16 +362,41 @@ class Model {
 			err.type = "estelle.sql.insertion";
 			err.message = `Error inserting ${this.id} into the database for ${this.constructor.tableName}.`;
 			throw err;
-		});
+		});*/
 	}
 	
 	/**
 	 * If a record exists in the database, update it.
 	 * If the record does not exist, create a new one.
-	 * @return an Operation object
+	 * @return a Knex promise
 	 */
 	createOrUpdate() {
-		// TODO: implement createOrUpdate
+		// Validate the object
+		var validationError = new Error();
+		
+		if (!this.validate(validationError)) {
+			return this.constructor._newErrorPromise(validationError);
+		}
+		
+		// Serialize for use in the database
+		var properties = this.serialize();
+		
+		// Add timestamps
+		if (this.constructor.options.timestamp) {
+			properties.created = Date.now();
+			properties.updated = Date.now();
+		}
+		
+		// Insert into the database
+		var query = this.connection(this.constructor.tableName);
+		switch (this.connection.clientName) {
+			case "pg":
+				query.insert(properties).toString();
+				// TODO: finish this
+		}
+		
+		this.constructor._logQuery(query);
+		return query;
 	}
 	
 	/**
@@ -376,7 +405,7 @@ class Model {
 	
 	/**
 	 * Push any updates made to the object to the database
-	 * @return an Operation object
+	 * @return a Knex promise
 	 */
 	update() {
 		// Validate the object
