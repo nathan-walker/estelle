@@ -29,7 +29,8 @@ module.exports = {
 			sqlite3: "datetime"
 		},
 		validator: (value) => value instanceof Date,
-		deserialize: (value) => new Date(value)
+		deserialize: (value) => new Date(value),
+		serialize: (value) => value.toISOString()
 	},
 	
 	UUID: {
