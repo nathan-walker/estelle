@@ -365,8 +365,8 @@ class Model {
 		
 		// Add timestamps
 		if (this.constructor.options.timestamp) {
-			properties.created = Date.now().toISOString();
-			properties.updated = Date.now().toISOString();
+			properties.created = new Date().toISOString();
+			properties.updated = new Date().toISOString();
 		}
 		
 		// Insert into the database
@@ -407,8 +407,8 @@ class Model {
 		
 		// Add timestamps
 		if (this.constructor.options.timestamp) {
-			properties.created = Date.now().toISOString();
-			properties.updated = Date.now().toISOString();
+			properties.created = new Date().toISOString();
+			properties.updated = new Date().toISOString();
 		}
 		
 		// Insert into the database
@@ -458,7 +458,7 @@ class Model {
 		
 		// Add timestamp
 		if (this.constructor.options.timestamp) {
-			properties.updated = Date.now().toISOString();
+			properties.updated = new Date().toISOString();
 		}
 		
 		// Insert into the database
@@ -475,7 +475,7 @@ class Model {
 			
 			// Add timestamp
 			if (this.constructor.options.timestamp) {
-				properties.updated = Date.now();
+				properties.updated = new Date().toISOString();
 			}
 			
 			properties.deleted = true;
