@@ -272,8 +272,9 @@ class Model {
 	
 	/**
 	 * Initializes the table in the database
+	 * @param whether or not to create the DB tables as well
 	 */
-	static initialize() {
+	static initialize(initDB) {
 		if (!this.connection) {
 			return this._newNoConnectionPromise();
 		}
@@ -294,50 +295,55 @@ class Model {
 			this.required = required;
 		}
 		
-		return this.connection.schema.createTableIfNotExists(this.tableName, (table) => {
-			this.schema.forEach((type, key) => {
-				var typeVal;
-				if (type.types) {
-					typeVal = type.types[this.connection.clientName];
-				} else if (type.dataType) {
-					typeVal = type.dataType.types[this.connection.clientName];
+		if (initDB) {
+			return this.connection.schema.createTableIfNotExists(this.tableName, (table) => {
+				this.schema.forEach((type, key) => {
+					var typeVal;
+					if (type.types) {
+						typeVal = type.types[this.connection.clientName];
+					} else if (type.dataType) {
+						typeVal = type.dataType.types[this.connection.clientName];
+					}
+					
+					if (!typeVal) {
+						var err = new Error();
+						err.type = "estelle.schema.noColumnType";
+						err.message = `Column type is not defined for ${this.name}.${key}.`;
+						throw err;
+					}
+					
+					var column = table.specificType(key, typeVal);
+					
+					if (this.required.has(key)) {
+						column.notNullable();
+					}
+					if (this.options.primaryKey === key) {
+						column.primary();
+					}
+				});
+				
+				if (this.options.timestamp) {
+					if (this.connection.clientName === 'pg') {
+						table.specificType("created", "timestamp");
+						table.specificType("updated", "timestamp");
+					} else {
+						table.specificType("created", "datetime");
+						table.specificType("updated", "datetime");
+					}
 				}
 				
-				if (!typeVal) {
-					var err = new Error();
-					err.type = "estelle.schema.noColumnType";
-					err.message = `Column type is not defined for ${this.name}.${key}.`;
-					throw err;
+				if (this.options.safeDelete) {
+					table.specificType("deleted", "boolean").notNullable().defaultTo(false);
 				}
 				
-				var column = table.specificType(key, typeVal);
-				
-				if (this.required.has(key)) {
-					column.notNullable();
-				}
-				if (this.options.primaryKey === key) {
-					column.primary();
+				if (this.options.compositePrimaryKey) {
+					table.primary(this.options.compositePrimaryKey);
 				}
 			});
-			
-			if (this.options.timestamp) {
-				if (this.connection.clientName === 'pg') {
-					table.specificType("created", "timestamp");
-					table.specificType("updated", "timestamp");
-				} else {
-					table.specificType("created", "datetime");
-					table.specificType("updated", "datetime");
-				}
-			}
-			
-			if (this.options.safeDelete) {
-				table.specificType("deleted", "boolean").notNullable().defaultTo(false);
-			}
-			
-			if (this.options.compositePrimaryKey) {
-				table.primary(this.options.compositePrimaryKey);
-			}
-		});
+		} else {
+			return Promise.resolve();
+		}
+		
 	}
 	
 	/** 
