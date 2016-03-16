@@ -96,10 +96,13 @@ module.exports = {
 		},
 		validator: (value) => typeof value === "object",
 		serialize: (value) => {
-			console.log('serializing');
 			return JSON.stringify(value);
 		},
 		deserialize: (value) => {
+			// PG returns a value that doesn't need to be deserialized
+			if (typeof value === 'object') {
+				return value;
+			}
 			try {
 				return JSON.parse(value);
 			} catch (e) {
