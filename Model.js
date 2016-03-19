@@ -106,7 +106,6 @@ class Model {
 		}
 		
 		return query.then((res) => {
-			console.log(res);
 			if (res.length > 0) {
 				if (!this.options.safeDelete || res[0].deleted === 'false' || !res[0].deleted) {
 					return new this(res[0], true);
