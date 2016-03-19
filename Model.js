@@ -294,6 +294,20 @@ class Model {
 			this.required = required;
 		}
 		
+		if (this.primaries === undefined) {
+			let primaries = new Set();
+			
+			if (this.options.primaryKey) {
+				primaries.add(this.options.primaryKey);
+			} else if (this.options.compositePrimaryKey) {
+				for (let key of this.options.compositePrimaryKey) {
+					primaries.add(key);
+				}
+			}
+			
+			this.primaries = primaries;
+		}
+		
 		if (initDB) {
 			return this.connection.schema.createTableIfNotExists(this.tableName, (table) => {
 				this.schema.forEach((type, key) => {
@@ -466,8 +480,18 @@ class Model {
 			properties.updated = new Date().toISOString();
 		}
 		
+		// Use the appropriate keys to search
+		var searchObject = {};
+		for (let key of this.constructor.primaries) {
+			if (properties[key]) {
+				searchObject[key] = properties[key];
+			}
+		}
+		
 		// Insert into the database
-		return this.connection(this.constructor.tableName).where('id', this.id).update(properties);
+		var query = this.connection(this.constructor.tableName).where(searchObject).update(properties);
+		this.constructor._logQuery(query);
+		return query;
 	}
 	
 	/**
@@ -475,6 +499,17 @@ class Model {
 	 * @return an Operation object
 	 */
 	delete() {
+		
+		// Use the appropriate keys to search
+		var searchObject = {};
+		for (let key of this.constructor.primaries) {
+			if (this[key]) {
+				searchObject[key] = this[key];
+			}
+		}
+		
+		var query;
+		
 		if (this.constructor.options.safeDelete) {
 			var properties = {};
 			
@@ -485,10 +520,13 @@ class Model {
 			
 			properties.deleted = true;
 			
-			return this.connection(this.constructor.tableName).where('id', this.id).update(properties);
+			query = this.connection(this.constructor.tableName).where(searchObject).update(properties);
 		} else {
-			return this.connection(this.constructor.tableName).where('id', this.id).del();
+			query = this.connection(this.constructor.tableName).where(searchObject).del();
 		}
+		
+		this.constructor._logQuery(query);
+		return query;
 	}
 	
 	/**
