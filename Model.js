@@ -127,25 +127,9 @@ class Model {
 	 */
 	
 	static findWhere(where) {
-		if (!this.connection) {
-			return this._newNoConnectionPromise();
-		}
-		
 		var query = this.connection.select().from(this.tableName).where(where);
 		
-		if (!this.connection.production) {
-			this._logQuery(query);
-		}
-		
-		return query.then((res) => {
-			var out = [];
-			res.forEach((obj) => {
-				if (!this.options.safeDelete || obj.deleted === 'false' || !obj.deleted) {
-					out.push(new this(obj, true));
-				}	
-			});
-			return out;
-		});
+		return this.findQuery(query);
 	}
 	
 	/**
@@ -153,12 +137,22 @@ class Model {
 	 * @return a Query object
 	 */
 	static findAll() {
-		if (!this.connection) {
-			return this._newNoConnectionPromise();
-		}
 		
 		var query = this.connection.select().from(this.tableName);
 		
+		return this.findQuery(query);
+	}
+	
+	/**
+	 * Converts an arbitrary SELECT query into an array of objects
+	 * @param query - A knex query object
+	 * @return Promise -> Model[]
+	 */
+	static findQuery(query) {
+		if (!this.connection) {
+			return this._newNoConnectionPromise();
+		}
+				
 		if (!this.connection.production) {
 			this._logQuery(query);
 		}
