@@ -77,6 +77,24 @@ module.exports = {
 		};
 	},
 	
+	VARCHAR_TRUNCATED: function(number) {
+		return {
+			types: {
+				pg: `varchar(${number})`,
+				mysql: `varchar(${number})`,
+				sqlite3: `varchar(${number})`
+			},
+			validator: (value) => typeof value === 'string',
+			serialize: (value) => {
+				if (value.length > number) {
+					value = value.substring(0, number);
+				}
+				
+				return number;
+			}
+		};
+	},
+	
 	CHAR: function(number) {
 		return {
 			types: {
