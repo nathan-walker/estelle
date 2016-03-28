@@ -631,6 +631,20 @@ class Model {
 		
 		return out;
 	}
+	
+	/**
+	 * Converts the object's properties to a standard JS object
+	 * @return JS object with the properties
+	 */
+	toObject() {
+		var out = {};
+		
+		this.properties.forEach((v, k) => {
+			out[k] = v;
+		});
+		
+		return out;
+	}
 }
 
 /**
